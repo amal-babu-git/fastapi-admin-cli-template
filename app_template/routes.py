@@ -11,6 +11,7 @@ from .models import ${model_name}
 from .schemas import ${model_name}Read, ${model_name}Create, ${model_name}Update
 from .services import ${model_name}Service
 
+# Change router name to make it more explicit when importing
 router = APIRouter()
 service = ${model_name}Service()
 
