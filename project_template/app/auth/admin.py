@@ -33,14 +33,7 @@ class UserAdmin(ModelView, model=User):
         User.is_superuser
     ]
     
-    column_details_exclude_list = [
-        User.hashed_password
-    ]
-    
-    form_excluded_columns = [
-        User.hashed_password
-    ]
-    
+
     can_create = True
     can_edit = True
     can_delete = True
