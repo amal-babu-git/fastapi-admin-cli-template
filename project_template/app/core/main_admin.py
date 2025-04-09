@@ -8,8 +8,11 @@ from app.core.db import engine
 from fastapi import FastAPI
 from typing import List, Type
 from sqladmin.models import ModelView
+from app.core.settings import settings
+from app.core.admin_auth import AdminAuth
 import importlib
 import logging
+
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +39,15 @@ def setup_admin(app: FastAPI) -> None:
     Args:
         app (FastAPI): The FastAPI application instance.
     """
-    admin = Admin(app, engine)
+    authentication_backend = AdminAuth(secret_key=settings.SECRET_KEY)
+
+    # Initialize admin with authentication
+    admin = Admin(
+        app=app,
+        engine=engine,
+        authentication_backend=authentication_backend,
+        title="Fastapis Admin"
+    )
     
     # Import admin modules - update these imports based on your app structure
     try:
@@ -55,3 +66,5 @@ def setup_admin(app: FastAPI) -> None:
             
     except ImportError as e:
         logger.warning(f"Error importing admin module: {e}")
+
+
