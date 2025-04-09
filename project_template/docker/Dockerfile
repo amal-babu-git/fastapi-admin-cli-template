@@ -14,6 +14,7 @@ COPY README.md .
 
 # Copy application code
 COPY app ./app
+COPY scripts ./scripts
 
 # Install project and dependencies
 RUN pip install --no-cache-dir -e .
