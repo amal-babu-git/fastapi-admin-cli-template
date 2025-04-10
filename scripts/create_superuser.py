@@ -9,8 +9,7 @@ import argparse
 from pathlib import Path
 
 # Add the project root to path to allow imports
-project_root = Path(__file__).parent.parent.absolute()
-sys.path.insert(0, str(project_root))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 """
 IMPORTANT: Since the database is dockerized, run this script using:
@@ -33,26 +32,30 @@ async def create_superuser(email, password, first_name=None, last_name=None):
         user_id = str(uuid.uuid4())
 
         async with async_session_factory() as session:
-            try:
-                # Check if user already exists - use parameterized query for safety
-                query = text("SELECT id, is_superuser FROM users WHERE email = :email")
-                result = await session.execute(query, {"email": email})
-                user = result.fetchone()
+            # Check if user already exists
+            result = await session.execute(
+                text("SELECT id, is_superuser FROM users WHERE email = :email"),
+                {"email": email}
+            )
+            user = result.fetchone()
 
-                if user:
-                    print(f"User with email {email} already exists.")
+            if user:
+                print(f"User with email {email} already exists.")
 
-                    # Update to superuser if needed
-                    if not user.is_superuser:
-                        update_query = text(
-                            "UPDATE users SET is_superuser = TRUE, is_verified = TRUE WHERE email = :email")
-                        await session.execute(update_query, {"email": email})
-                        await session.commit()
-                        print(f"Updated user {email} to superuser status.")
-                    return
+                # Update to superuser if needed
+                if not user.is_superuser:
+                    await session.execute(
+                        text(
+                            "UPDATE users SET is_superuser = TRUE, is_verified = TRUE WHERE email = :email"),
+                        {"email": email}
+                    )
+                    await session.commit()
+                    print(f"Updated user {email} to superuser status.")
+                return
 
-                # Create new superuser with parameterized query
-                insert_query = text("""
+            # Create new superuser
+            await session.execute(
+                text("""
                 INSERT INTO users (
                     id, email, hashed_password, is_active, 
                     is_superuser, is_verified, first_name, last_name
@@ -60,30 +63,21 @@ async def create_superuser(email, password, first_name=None, last_name=None):
                     :id, :email, :hashed_password, TRUE,
                     TRUE, TRUE, :first_name, :last_name
                 )
-                """)
-                
-                await session.execute(
-                    insert_query,
-                    {
-                        "id": user_id,
-                        "email": email,
-                        "hashed_password": hashed_password,
-                        "first_name": first_name,
-                        "last_name": last_name
-                    }
-                )
+                """),
+                {
+                    "id": user_id,
+                    "email": email,
+                    "hashed_password": hashed_password,
+                    "first_name": first_name,
+                    "last_name": last_name
+                }
+            )
 
-                await session.commit()
-                print(f"✓ Superuser {email} created successfully!")
-                
-            except Exception as db_error:
-                await session.rollback()
-                raise Exception(f"Database operation failed: {str(db_error)}") from db_error
+            await session.commit()
+            print(f"✓ Superuser {email} created successfully!")
 
     except Exception as e:
         print(f"Error creating superuser: {str(e)}")
-        if isinstance(e.__cause__, Exception):
-            print(f"Caused by: {str(e.__cause__)}")
         raise
 
 
@@ -98,17 +92,10 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    try:
-        # Run the async function
-        asyncio.run(create_superuser(
-            args.email,
-            args.password,
-            args.first_name,
-            args.last_name
-        ))
-    except KeyboardInterrupt:
-        print("\nOperation cancelled by user.")
-        sys.exit(1)
-    except Exception as e:
-        print(f"Fatal error: {str(e)}")
-        sys.exit(1)
+    # Run the async function
+    asyncio.run(create_superuser(
+        args.email,
+        args.password,
+        args.first_name,
+        args.last_name
+    ))
