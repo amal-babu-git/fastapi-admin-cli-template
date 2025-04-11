@@ -17,6 +17,8 @@ dependencies = [
     "uvicorn>=0.34.0",
     "fastapi-users[sqlalchemy]>=14.0.1",
     "fastapi-mail>=1.4.2",
+    "fastapi-admin-cli>=0.1.13",
+
 ]
 
 [project.optional-dependencies]
