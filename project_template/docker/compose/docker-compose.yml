@@ -12,6 +12,7 @@ services:
       - ../../app:/app/app
       - ../../migrations:/app/migrations
       - ../../alembic.ini:/app/alembic.ini
+      - ../../scripts:/app/scripts
     env_file:
       - ../../.env
     environment:
